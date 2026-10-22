@@ -12,7 +12,7 @@ if "ru.unlocked.rustore." in manifest:
 package = re.search(r'<manifest\b[^>]*\bpackage="([^"]+)"', manifest).group(1)
 components = f"""
         <activity android:name="ru.unlocked.rustore.UnlockedSettingsActivity" android:exported="false" android:label="Unlocked"/>
-        <provider android:name="ru.unlocked.rustore.UnlockedInitProvider" android:authorities="{package}.unlocked.init" android:exported="false"/>
+        <provider android:name="ru.unlocked.rustore.UnlockedInitProvider" android:authorities="{package}.unlocked.init" android:exported="false" android:initOrder="1000"/>
     </application>"""
 
 if manifest.count("</application>") != 1:

@@ -37,13 +37,27 @@ scripts/build.sh                                       # → work/out/rustore-un
 ### Вкладка «Unlocked»
 
 - **Основное**: «Мод включён» (главный выключатель) и «Журнал мода» (logcat, тег `Unlocked`).
-- **Функции**: появляется, когда в `Unlocked.FEATURES` есть хотя бы одна функция.
+- **Функции**: переключатели из `Unlocked.FEATURES`.
+  - «Всегда показывать Коннект» (`connect_always`, по умолчанию выключен). Коннект показывается в режиме «доступ к российским сервисам из-за границы», даже если сервер или удалённый конфиг его скрывают. Применяется после перезапуска RuStore.
 - **О моде**: версия мода, версия RuStore и сброс настроек.
 
 Как добавить функцию:
 
 1. Добавить элемент в `Unlocked.FEATURES`: `new Feature("key", "Название", "Описание", false)`.
 2. В нужном месте smali RuStore вызвать `invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z` (в `v0` лежит ключ).
+
+## Коннект
+
+Модуль `ru.vk.store.feature.connect`. Коннект виден, когда выполнены оба условия:
+
+1. Удалённый конфиг `featureConnectEnabled` равен `true` (`ConnectAvailabilityRemoteConfig.isEnabled`). Иначе use case'ы `RefreshConnectAvailability` и `AwaitConnectAvailability` вообще не проверяют доступность.
+2. `ConnectAvailabilityRepositoryImpl` (`mc1/i`) получил статус, отличный от `UNAVAILABLE`. Статус приходит с сервера: `POST v2/connect/availability/check` возвращает `DIRECT` (Россия), `REVERSE` (из-за границы) или `UNAVAILABLE`.
+
+У репозитория есть отладочное переопределение статуса `mc1/i.d()`. В релизе оно всегда возвращает `null`. Если оно вернёт статус, проверка на сервере пропускается.
+
+`patches/connect-always-visible.patch` при включённом `connect_always` делает две вещи: `isEnabled` возвращает `true`, а `d()` возвращает `REVERSE`.
+
+Патч влияет только на показ Коннекта в интерфейсе. Само подключение по-прежнему идёт через серверы VK.
 
 ## Экран настроек RuStore 1.112.0.4
 

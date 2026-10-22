@@ -23,7 +23,12 @@ public final class Unlocked {
     static final String KEY_DEBUG_LOG = "debug_log";
 
     /** Переключатели функций мода, показываются в разделе «Функции». */
-    static final Feature[] FEATURES = {};
+    static final Feature[] FEATURES = {
+            // patches/connect-always-visible.patch
+            new Feature("connect_always", "Всегда показывать Коннект",
+                    "Доступ к российским сервисам из-за границы, даже если RuStore скрывает Коннект. "
+                            + "Применится после перезапуска RuStore", false),
+    };
 
     private static Context appContext;
     private static WeakReference<Activity> resumedActivity = new WeakReference<Activity>(null);

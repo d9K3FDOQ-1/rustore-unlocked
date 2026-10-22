@@ -1,0 +1,48 @@
+--- a/smali_classes4/ru/vk/store/feature/connect/availability/api/domain/ConnectAvailabilityRemoteConfig.smali
++++ b/smali_classes4/ru/vk/store/feature/connect/availability/api/domain/ConnectAvailabilityRemoteConfig.smali
+@@ -115,6 +115,21 @@
+         }
+     .end annotation
+ 
++    # Unlocked: «Всегда показывать Коннект»
++    const-string v0, "connect_always"
++
++    invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unlocked_original
++
++    sget-object v0, Ljava/lang/Boolean;->TRUE:Ljava/lang/Boolean;
++
++    return-object v0
++
++    :unlocked_original
++
+     .line 1
+     const/4 v0, 0x0
+ 
+--- a/smali_classes4/mc1/i.smali
++++ b/smali_classes4/mc1/i.smali
+@@ -772,6 +772,21 @@
+ .method public final d()Lru/vk/store/feature/connect/availability/api/domain/ConnectAvailabilityStatus;
+     .locals 4
+ 
++    # Unlocked: «Всегда показывать Коннект»
++    const-string v0, "connect_always"
++
++    invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unlocked_original
++
++    sget-object v0, Lru/vk/store/feature/connect/availability/api/domain/ConnectAvailabilityStatus;->REVERSE:Lru/vk/store/feature/connect/availability/api/domain/ConnectAvailabilityStatus;
++
++    return-object v0
++
++    :unlocked_original
++
+     .line 1
+     invoke-static {}, Lru/vk/store/feature/connect/availability/api/domain/ConnectAvailabilityStatus;->getEntries()Lpu0/a;
+ 
