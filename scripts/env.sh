@@ -11,6 +11,10 @@ APKTOOL_VERSION=2.12.1
 JADX_VERSION=1.5.3
 UBER_SIGNER_VERSION=1.3.0
 DX_VERSION=16.0.1
+# Заглушка Android API для компиляции. com.google.android:android доступен на
+# Maven Central только до 4.1.1.4 (API 16) — это потолок компиляции мода, хотя
+# minSdk 26. Код мода намеренно использует только API <= 16; любой вызов API 17+
+# здесь не скомпилируется. Для проверки API 26+ подставьте настоящий android.jar.
 ANDROID_STUB_VERSION=4.1.1.4
 
 APKTOOL_JAR="$TOOLS/apktool.jar"

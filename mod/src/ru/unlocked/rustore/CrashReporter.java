@@ -44,7 +44,10 @@ public final class CrashReporter {
                 @Override
                 public void uncaughtException(Thread thread, Throwable throwable) {
                     try {
-                        capture(throwable, "uncaught:" + thread.getName());
+                        // Только сохраняем отчёт: буфер обмена трогаем лишь в UI, чтобы не
+                        // затирать его на чужих крашах RuStore и не упереться в запрет
+                        // фонового доступа к буферу на Android 10+.
+                        capture(throwable, "uncaught:" + thread.getName(), Unlocked.context(), false);
                     } catch (Throwable ignored) {
                     }
                     // Сохраняем штатное поведение (показ системного диалога, завершение).
@@ -57,21 +60,34 @@ public final class CrashReporter {
         }
     }
 
-    /**
-     * Формирует отчёт, копирует его в буфер, сохраняет и пишет в logcat.
-     * Возвращает текст отчёта (или строку throwable, если что-то пошло не так).
-     */
+    /** Сохраняет и копирует отчёт, используя контекст мода. */
     static String capture(Throwable throwable, String where) {
+        return capture(throwable, where, Unlocked.context(), true);
+    }
+
+    /**
+     * Формирует отчёт, сохраняет его, при copyNow кладёт в буфер и пишет в logcat.
+     * Никогда не бросает исключений. Возвращает текст отчёта.
+     *
+     * @param context контекст для буфера/prefs; при сбоях инициализации передаётся
+     *                явно, т.к. {@link Unlocked#context()} может быть ещё null.
+     */
+    static String capture(Throwable throwable, String where, Context context, boolean copyNow) {
         String report;
         try {
-            report = build(throwable, where);
+            report = build(throwable, where, context);
         } catch (Throwable inner) {
-            report = String.valueOf(throwable);
+            try {
+                report = String.valueOf(throwable);
+            } catch (Throwable t2) {
+                report = "RuStore Unlocked: не удалось сформировать отчёт";
+            }
         }
         lastReport = report;
-        Context context = Unlocked.context();
         save(context, report);
-        copyToClipboard(context, report);
+        if (copyNow) {
+            copyToClipboard(context, report);
+        }
         try {
             Log.e(Unlocked.TAG, "crash (" + where + ")", throwable);
         } catch (Throwable ignored) {
@@ -116,17 +132,18 @@ public final class CrashReporter {
             return;
         }
         try {
-            Unlocked.prefs(context).edit().putString(KEY_LAST_CRASH, report).apply();
+            // commit(), а не apply(): на пути необработанного исключения процесс
+            // убивается сразу после, и асинхронная запись apply() может потеряться.
+            Unlocked.prefs(context).edit().putString(KEY_LAST_CRASH, report).commit();
         } catch (Throwable ignored) {
         }
     }
 
-    private static String build(Throwable throwable, String where) {
+    private static String build(Throwable throwable, String where, Context context) {
         StringBuilder sb = new StringBuilder();
         sb.append("RuStore Unlocked — отчёт об ошибке\n");
         sb.append("mod: ").append(Unlocked.VERSION).append('\n');
         sb.append("where: ").append(where).append('\n');
-        Context context = Unlocked.context();
         if (context != null) {
             try {
                 sb.append("app: ")

@@ -17,7 +17,12 @@ public final class UnlockedInitProvider extends ContentProvider {
         try {
             Unlocked.init(getContext());
         } catch (Throwable t) {
-            CrashReporter.capture(t, "init");
+            // Контекст передаём явно: init мог упасть до того, как Unlocked
+            // запомнил его, и тогда Unlocked.context() ещё null.
+            try {
+                CrashReporter.capture(t, "init", getContext(), false);
+            } catch (Throwable ignored) {
+            }
         }
         return true;
     }

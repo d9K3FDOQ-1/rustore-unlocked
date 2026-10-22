@@ -268,11 +268,18 @@ public final class UnlockedSettingsActivity extends Activity {
     private void showError(Throwable t) {
         String report;
         try {
-            report = CrashReporter.capture(t, "settings-screen");
+            // Сохраняем через контекст активности (не null и в фокусе), копируем отдельно.
+            report = CrashReporter.capture(t, "settings-screen", this, false);
         } catch (Throwable inner) {
             report = String.valueOf(t);
         }
         final String text = report;
+        boolean copied;
+        try {
+            copied = CrashReporter.copyToClipboard(this, text);
+        } catch (Throwable inner) {
+            copied = false;
+        }
         try {
             int pad = Math.round(16 * getResources().getDisplayMetrics().density);
             LinearLayout root = new LinearLayout(this);
@@ -287,7 +294,9 @@ public final class UnlockedSettingsActivity extends Activity {
             root.addView(title);
 
             TextView note = new TextView(this);
-            note.setText("Трейс скопирован в буфер обмена. Пришлите его, чтобы починить.");
+            note.setText(copied
+                    ? "Трейс скопирован в буфер обмена. Пришлите его, чтобы починить."
+                    : "Не удалось скопировать автоматически — нажмите кнопку ниже.");
             note.setTextColor(0xFFB0B0B0);
             note.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
             note.setPadding(0, pad / 2, 0, pad / 2);
