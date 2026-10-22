@@ -12,7 +12,13 @@ import android.net.Uri;
 public final class UnlockedInitProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
-        Unlocked.init(getContext());
+        // Ставим обработчик как можно раньше, чтобы ловить и сбои инициализации.
+        CrashReporter.install();
+        try {
+            Unlocked.init(getContext());
+        } catch (Throwable t) {
+            CrashReporter.capture(t, "init");
+        }
         return true;
     }
 

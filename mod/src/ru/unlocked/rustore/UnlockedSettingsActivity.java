@@ -16,6 +16,7 @@ import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -39,6 +40,32 @@ public final class UnlockedSettingsActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        CrashReporter.install();
+        // Тему нужно выставить до super.onCreate; сбой здесь не фатален.
+        try {
+            applyTheme();
+        } catch (Throwable ignored) {
+        }
+        super.onCreate(savedInstanceState);
+        try {
+            if (Unlocked.context() == null) {
+                Unlocked.init(this);
+            }
+            prefs = Unlocked.prefs(this);
+            initColors();
+
+            setTitle("Unlocked");
+            ActionBar actionBar = getActionBar();
+            if (actionBar != null) {
+                actionBar.setDisplayHomeAsUpEnabled(true);
+            }
+            setContentView(buildContent());
+        } catch (Throwable t) {
+            showError(t);
+        }
+    }
+
+    private void applyTheme() {
         night = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
                 == Configuration.UI_MODE_NIGHT_YES;
         int theme = getResources().getIdentifier(
@@ -46,25 +73,15 @@ public final class UnlockedSettingsActivity extends Activity {
         if (theme != 0) {
             setTheme(theme);
         }
-        super.onCreate(savedInstanceState);
-        if (Unlocked.context() == null) {
-            Unlocked.init(this);
-        }
-        prefs = Unlocked.prefs(this);
+    }
 
+    private void initColors() {
         colorBackground = night ? 0xFF121212 : 0xFFF2F3F5;
         colorCard = night ? 0xFF1E1E20 : 0xFFFFFFFF;
         colorText = night ? 0xFFFFFFFF : 0xFF19191A;
         colorTextSecondary = night ? 0x99FFFFFF : 0xFF818C99;
         colorAccent = 0xFF0077FF;
         colorDivider = night ? 0x1FFFFFFF : 0x1F000000;
-
-        setTitle("Unlocked");
-        ActionBar actionBar = getActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-        setContentView(buildContent());
     }
 
     @Override
@@ -99,7 +116,7 @@ public final class UnlockedSettingsActivity extends Activity {
             }
             divider(features);
             View restart = textRow(features, "Перезапустить RuStore", "Изменения применяются после перезапуска");
-            ((TextView) ((ViewGroup) restart).getChildAt(0)).setTextColor(colorAccent);
+            titleView(restart).setTextColor(colorAccent);
             restart.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -130,13 +147,29 @@ public final class UnlockedSettingsActivity extends Activity {
         infoRow(about, "Версия RuStore", appVersion());
         divider(about);
         View reset = textRow(about, "Сбросить настройки мода", null);
-        ((TextView) ((ViewGroup) reset).getChildAt(0)).setTextColor(0xFFE64646);
+        titleView(reset).setTextColor(0xFFE64646);
         reset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 confirmReset();
             }
         });
+
+        final String lastCrash = CrashReporter.lastReport();
+        if (lastCrash != null) {
+            divider(about);
+            View copyCrash = textRow(about, "Скопировать последнюю ошибку",
+                    "Трейс последнего сбоя — в буфер обмена");
+            titleView(copyCrash).setTextColor(colorAccent);
+            copyCrash.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    boolean ok = CrashReporter.copyToClipboard(UnlockedSettingsActivity.this, lastCrash);
+                    Toast.makeText(UnlockedSettingsActivity.this,
+                            ok ? "Скопировано" : "Не удалось скопировать", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
         ScrollView scroll = new ScrollView(this);
         scroll.setBackgroundColor(colorBackground);
@@ -223,6 +256,76 @@ public final class UnlockedSettingsActivity extends Activity {
         row.addView(texts, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         card.addView(row);
         return row;
+    }
+
+    /** TextView заголовка строки, построенной {@link #textRow}. */
+    private TextView titleView(View row) {
+        ViewGroup texts = (ViewGroup) ((ViewGroup) row).getChildAt(0);
+        return (TextView) texts.getChildAt(0);
+    }
+
+    /** Экран с трейсом вместо краша; трейс сразу уходит в буфер обмена. */
+    private void showError(Throwable t) {
+        String report;
+        try {
+            report = CrashReporter.capture(t, "settings-screen");
+        } catch (Throwable inner) {
+            report = String.valueOf(t);
+        }
+        final String text = report;
+        try {
+            int pad = Math.round(16 * getResources().getDisplayMetrics().density);
+            LinearLayout root = new LinearLayout(this);
+            root.setOrientation(LinearLayout.VERTICAL);
+            root.setPadding(pad, pad, pad, pad);
+            root.setBackgroundColor(0xFF121212);
+
+            TextView title = new TextView(this);
+            title.setText("Unlocked — ошибка");
+            title.setTextColor(0xFFFFFFFF);
+            title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+            root.addView(title);
+
+            TextView note = new TextView(this);
+            note.setText("Трейс скопирован в буфер обмена. Пришлите его, чтобы починить.");
+            note.setTextColor(0xFFB0B0B0);
+            note.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+            note.setPadding(0, pad / 2, 0, pad / 2);
+            root.addView(note);
+
+            Button copy = new Button(this);
+            copy.setText("Скопировать ещё раз");
+            copy.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    boolean ok = CrashReporter.copyToClipboard(UnlockedSettingsActivity.this, text);
+                    Toast.makeText(UnlockedSettingsActivity.this,
+                            ok ? "Скопировано" : "Не удалось скопировать", Toast.LENGTH_SHORT).show();
+                }
+            });
+            root.addView(copy);
+
+            TextView trace = new TextView(this);
+            trace.setText(text);
+            trace.setTextColor(0xFFE0E0E0);
+            trace.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+            trace.setTypeface(Typeface.MONOSPACE);
+            trace.setTextIsSelectable(true);
+            trace.setPadding(0, pad, 0, pad);
+
+            ScrollView scroll = new ScrollView(this);
+            scroll.addView(trace);
+            root.addView(scroll, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+            setContentView(root);
+        } catch (Throwable inner) {
+            try {
+                Toast.makeText(this, "Unlocked: ошибка, трейс в буфере обмена", Toast.LENGTH_LONG).show();
+            } catch (Throwable ignored) {
+            }
+            finish();
+        }
     }
 
     private void divider(LinearLayout card) {
