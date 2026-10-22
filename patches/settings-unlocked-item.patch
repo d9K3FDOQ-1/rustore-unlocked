@@ -1,0 +1,52 @@
+--- a/smali_classes5/es2/e0$f.smali
++++ b/smali_classes5/es2/e0$f.smali
+@@ -559,6 +559,49 @@
+     .line 229
+     .line 230
+     .line 231
++    # Unlocked: пункт «Unlocked» после «О RuStore». v16 всё ещё содержит Composer.
++    const-string v1, "Unlocked"
++
++    invoke-static {}, Lx03/z1;->a()Lx2/d;
++
++    move-result-object v2
++
++    new-instance v3, Lru/unlocked/rustore/OpenSettingsClick;
++
++    invoke-direct {v3}, Lru/unlocked/rustore/OpenSettingsClick;-><init>()V
++
++    const/4 v4, 0x0
++
++    const/4 v5, 0x0
++
++    const/4 v6, 0x0
++
++    const/4 v7, 0x0
++
++    const/4 v8, 0x0
++
++    const/4 v9, 0x0
++
++    const/4 v10, 0x0
++
++    const/4 v11, 0x0
++
++    const/4 v12, 0x0
++
++    const/4 v13, 0x0
++
++    const/4 v14, 0x0
++
++    sget-object v15, Lr2/g2;->a:Lr2/g2$a;
++
++    const/16 v17, 0x0
++
++    const/16 v18, 0x6180
++
++    const/16 v19, 0x2ff8
++
++    invoke-static/range {v1 .. v19}, Lps2/i;->a(Ljava/lang/String;Lx2/d;Lkotlin/jvm/functions/Function0;Lk2/j;Lv3/l2;Lz13/n;Lu03/e;Ljava/lang/String;ZLjava/lang/String;Ljava/lang/String;ZZILr2/m2;Landroidx/compose/runtime/a;III)V
++
+     :goto_3
+     sget-object v0, Liu0/g0;->a:Liu0/g0;
+ 
