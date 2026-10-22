@@ -1,0 +1,118 @@
+--- a/smali_classes4/l91/s.smali
++++ b/smali_classes4/l91/s.smali
+@@ -58,6 +58,29 @@
+ # virtual methods
+ .method public final a(ILjava/lang/String;Lu81/c;Ljava/util/List;Ljava/util/UUID;Ljava/lang/String;ZLou0/c;)Ljava/lang/Object;
+     .locals 16
++
++    # Unlocked: «Убрать рекламу» — RawAdRepository (post-view)
++    const-string v0, "no_ads"
++
++    invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unlocked_original
++
++    new-instance v0, Ljava/lang/Exception;
++
++    const-string v1, "Unlocked: ads disabled"
++
++    invoke-direct {v0, v1}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    invoke-static {v0}, Liu0/r;->a(Ljava/lang/Throwable;)Liu0/q$a;
++
++    move-result-object v0
++
++    return-object v0
++
++    :unlocked_original
+ 
+     .line 1
+     move-object/from16 v1, p0
+@@ -334,6 +357,29 @@
+ .method public final b(ILjava/lang/String;Lu81/c;Ljava/util/List;Ljava/util/UUID;Ljava/util/List;Ljava/lang/String;Ljava/lang/String;Lou0/c;)Ljava/lang/Object;
+     .locals 19
+ 
++    # Unlocked: «Убрать рекламу» — RawAdRepository (post-view)
++    const-string v0, "no_ads"
++
++    invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unlocked_original
++
++    new-instance v0, Ljava/lang/Exception;
++
++    const-string v1, "Unlocked: ads disabled"
++
++    invoke-direct {v0, v1}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    invoke-static {v0}, Liu0/r;->a(Ljava/lang/Throwable;)Liu0/q$a;
++
++    move-result-object v0
++
++    return-object v0
++
++    :unlocked_original
++
+     .line 1
+     move-object/from16 v1, p0
+ 
+--- a/smali_classes4/z81/e0.smali
++++ b/smali_classes4/z81/e0.smali
+@@ -2223,6 +2223,21 @@
+ .method public final a(Ljava/util/List;Lu81/c;Ljava/util/List;Lr81/c;Ljava/util/Set;Ljava/util/UUID;ZZLou0/c;)Ljava/lang/Object;
+     .locals 15
+ 
++    # Unlocked: «Убрать рекламу» — RawAdvertisementRepositoryImpl отдаёт пустой список (v2/v3/ads, mradx.net)
++    const-string v0, "no_ads"
++
++    invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unlocked_original
++
++    sget-object v0, Lju0/z;->a:Lju0/z;
++
++    return-object v0
++
++    :unlocked_original
++
+     .line 1
+     move-object/from16 v0, p9
+ 
+--- a/smali_classes4/z81/n.smali
++++ b/smali_classes4/z81/n.smali
+@@ -162,6 +162,29 @@
+ .method public final a(Ljava/lang/String;Lou0/c;)Ljava/lang/Object;
+     .locals 7
+ 
++    # Unlocked: «Убрать рекламу» — AdminAdSlotsRepository (v1/showcase/ad-placements)
++    const-string v0, "no_ads"
++
++    invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unlocked_original
++
++    new-instance v0, Ljava/lang/Exception;
++
++    const-string v1, "Unlocked: ads disabled"
++
++    invoke-direct {v0, v1}, Ljava/lang/Exception;-><init>(Ljava/lang/String;)V
++
++    invoke-static {v0}, Liu0/r;->a(Ljava/lang/Throwable;)Liu0/q$a;
++
++    move-result-object v0
++
++    return-object v0
++
++    :unlocked_original
++
+     .line 1
+     instance-of v0, p2, Lz81/m;
+ 

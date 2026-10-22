@@ -1,0 +1,70 @@
+--- a/smali_classes5/gz2/c.smali
++++ b/smali_classes5/gz2/c.smali
+@@ -64,6 +64,21 @@
+ 
+ .method public static a()Z
+     .locals 3
++
++    # Unlocked: «Скрыть VPN от RuStore» — TunDetectedStateProvider: туннеля нет
++    const-string v0, "no_vpn_detect"
++
++    invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unlocked_original
++
++    const/4 v0, 0x0
++
++    return v0
++
++    :unlocked_original
+ 
+     .line 1
+     :try_start_0
+--- a/smali_classes5/gz2/i.smali
++++ b/smali_classes5/gz2/i.smali
+@@ -31,6 +31,19 @@
+ # virtual methods
+ .method public final a(Ly90/a;)V
+     .locals 2
++
++    # Unlocked: «Скрыть VPN от RuStore» — в StateFlow туннеля всегда STABLE
++    const-string v0, "no_vpn_detect"
++
++    invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unlocked_original
++
++    sget-object p1, Ly90/a;->STABLE:Ly90/a;
++
++    :unlocked_original
+ 
+     .line 1
+     const-string v0, "state"
+--- a/smali_classes5/ru/vk/store/lib/tundetector/TunDetectorRemoteConfig.smali
++++ b/smali_classes5/ru/vk/store/lib/tundetector/TunDetectorRemoteConfig.smali
+@@ -198,6 +198,21 @@
+         }
+     .end annotation
+ 
++    # Unlocked: «Скрыть VPN от RuStore» — tunDetectEnabled = false
++    const-string v0, "no_vpn_detect"
++
++    invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z
++
++    move-result v0
++
++    if-eqz v0, :unlocked_original
++
++    sget-object v0, Ljava/lang/Boolean;->FALSE:Ljava/lang/Boolean;
++
++    return-object v0
++
++    :unlocked_original
++
+     .line 1
+     const-string v0, "tunDetectEnabled"
+ 

@@ -37,14 +37,43 @@ scripts/build.sh                                       # → work/out/rustore-un
 ### Вкладка «Unlocked»
 
 - **Основное**: «Мод включён» (главный выключатель) и «Журнал мода» (logcat, тег `Unlocked`).
-- **Функции**: переключатели из `Unlocked.FEATURES`.
-  - «Всегда показывать Коннект» (`connect_always`, по умолчанию выключен). Коннект показывается в режиме «доступ к российским сервисам из-за границы», даже если сервер или удалённый конфиг его скрывают. Применяется после перезапуска RuStore.
+- **Функции**: переключатели из `Unlocked.FEATURES`, все по умолчанию выключены. Изменения применяются после перезапуска RuStore, для этого внизу раздела есть кнопка «Перезапустить RuStore».
+  - «Убрать рекламу» (`no_ads`). См. раздел [Реклама](#реклама).
+  - «Скрыть VPN от RuStore» (`no_vpn_detect`). См. раздел [Обнаружение VPN](#обнаружение-vpn).
+  - «Всегда показывать Коннект» (`connect_always`). Коннект показывается в режиме «доступ к российским сервисам из-за границы», даже если сервер или удалённый конфиг его скрывают. См. раздел [Коннект](#коннект).
+- **Скрытые разделы**: экраны из `Unlocked.SECRETS`, которые открываются напрямую, без кода в звонилке. См. раздел [Секретные коды](#секретные-коды).
 - **О моде**: версия мода, версия RuStore и сброс настроек.
 
 Как добавить функцию:
 
 1. Добавить элемент в `Unlocked.FEATURES`: `new Feature("key", "Название", "Описание", false)`.
 2. В нужном месте smali RuStore вызвать `invoke-static {v0}, Lru/unlocked/rustore/Unlocked;->feature(Ljava/lang/String;)Z` (в `v0` лежит ключ).
+
+## Реклама
+
+Реклама приходит с бэкенда RuStore (`v2/ads`, `v3/ads`, `v3/ads/config`, `v1/showcase/ad-placements`) и от VK Ads (`https://m.mradx.net/mobile/{slotId}`). `patches/no-ads.patch` перехватывает три репозитория:
+
+| Класс | Источник | Что возвращает патч |
+|---|---|---|
+| `z81/e0` (`RawAdvertisementRepositoryImpl`) | `v2/ads`, `v3/ads`, mradx.net | пустой список, как при отсутствии слотов |
+| `l91/s` (`RawAdRepository`, post-view) | `v2/ads`, `v3/ads` | `Result.failure`, как при ошибке сети |
+| `z81/n` (`AdminAdSlotsRepository`) | `v1/showcase/ad-placements` | `Result.failure` |
+
+## Обнаружение VPN
+
+Модуль `ru.vk.store.lib.tundetector`. Сетевая библиотека `u90/h` помечает сеть как `UNSTABLE`, когда видит туннель. Это состояние читают `TunDetectedStateProvider` (`gz2/c`) и `DeviceTunDetector` (`gz2/b`), а включает проверку удалённый конфиг `tunDetectEnabled`. Результат показывается пользователю как окна и подсказки «Похоже, у вас включен VPN» (`TunDetectedDialogDestination`, стартовый флоу, кнопки установки).
+
+`patches/no-vpn-detect.patch` делает три вещи:
+
+- `TunDetectorRemoteConfig.isTunDetectEnabled` возвращает `false`;
+- `gz2/c.a()` возвращает `false`;
+- колбэк `gz2/i` всегда передаёт в `StateFlow` состояние `STABLE`.
+
+## Секретные коды
+
+В 1.112.0.4 в звонилке работает только один код: `*#*#8186525725#*#*`. Он состоит из APP_ID VK SDK (`8186525`) и `725`. Код обрабатывает `com.vk.superapp.logs.SuperappLogsBroadcastReceiver` и открывает `SuperappLogsActivity` — логи VK SuperApp Kit.
+
+Собственного отладочного меню у RuStore в релизе нет. `SduiTestScreenDestination` остался в коде только как класс маршрута, перейти на него нельзя.
 
 ## Коннект
 

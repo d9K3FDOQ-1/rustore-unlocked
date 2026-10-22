@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -20,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Вкладка «Unlocked» — настройки мода. Разметка строится в коде, чтобы мод
@@ -94,6 +96,31 @@ public final class UnlockedSettingsActivity extends Activity {
                     divider(features);
                 }
                 switchRow(features, feature.key, feature.title, feature.summary, feature.defaultValue);
+            }
+            divider(features);
+            View restart = textRow(features, "Перезапустить RuStore", "Изменения применяются после перезапуска");
+            ((TextView) ((ViewGroup) restart).getChildAt(0)).setTextColor(colorAccent);
+            restart.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    restartApp();
+                }
+            });
+        }
+
+        if (Unlocked.SECRETS.length > 0) {
+            LinearLayout secrets = section(list, "Скрытые разделы");
+            for (int i = 0; i < Unlocked.SECRETS.length; i++) {
+                final Unlocked.Secret secret = Unlocked.SECRETS[i];
+                if (i > 0) {
+                    divider(secrets);
+                }
+                textRow(secrets, secret.title, secret.summary).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        openSecret(secret);
+                    }
+                });
             }
         }
 
@@ -220,6 +247,25 @@ public final class UnlockedSettingsActivity extends Activity {
                     }
                 })
                 .show();
+    }
+
+    private void openSecret(Unlocked.Secret secret) {
+        try {
+            startActivity(new Intent().setClassName(getPackageName(), secret.activity));
+        } catch (RuntimeException e) {
+            Unlocked.log("open " + secret.activity + ": " + e);
+            Toast.makeText(this, "Не удалось открыть: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void restartApp() {
+        Intent launch = getPackageManager().getLaunchIntentForPackage(getPackageName());
+        if (launch == null) {
+            return;
+        }
+        launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(launch);
+        Runtime.getRuntime().exit(0);
     }
 
     private String appVersion() {

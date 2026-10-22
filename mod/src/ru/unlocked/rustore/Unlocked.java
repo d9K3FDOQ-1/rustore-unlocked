@@ -24,10 +24,21 @@ public final class Unlocked {
 
     /** Переключатели функций мода, показываются в разделе «Функции». */
     static final Feature[] FEATURES = {
+            // patches/no-ads.patch
+            new Feature("no_ads", "Убрать рекламу",
+                    "Не загружать рекламные блоки на витрине, в поиске и в рекомендациях", false),
+            // patches/no-vpn-detect.patch
+            new Feature("no_vpn_detect", "Скрыть VPN от RuStore",
+                    "Без окон и подсказок «Похоже, у вас включен VPN»", false),
             // patches/connect-always-visible.patch
             new Feature("connect_always", "Всегда показывать Коннект",
-                    "Доступ к российским сервисам из-за границы, даже если RuStore скрывает Коннект. "
-                            + "Применится после перезапуска RuStore", false),
+                    "Доступ к российским сервисам из-за границы, даже если RuStore скрывает Коннект", false),
+    };
+
+    /** Скрытые экраны RuStore и встроенных SDK, раздел «Скрытые разделы». */
+    static final Secret[] SECRETS = {
+            new Secret("Логи VK SuperApp", "Код в звонилке: *#*#8186525725#*#*",
+                    "com.vk.superapp.logs.SuperappLogsActivity"),
     };
 
     private static Context appContext;
@@ -121,6 +132,18 @@ public final class Unlocked {
 
         @Override
         public void onActivityDestroyed(Activity activity) {
+        }
+    }
+
+    static final class Secret {
+        final String title;
+        final String summary;
+        final String activity;
+
+        Secret(String title, String summary, String activity) {
+            this.title = title;
+            this.summary = summary;
+            this.activity = activity;
         }
     }
 
